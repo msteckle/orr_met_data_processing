@@ -1,5 +1,6 @@
 # Five years of meteorological surface data at Oak Ridge Reserve in Tennessee
 Data curated by: Morgan Steckler (stecklermr@ornl.gov)
+
 PI: Xiao-Ying Yu (yuxiaoying@ornl.gov)
 
 ### Data descriptor pre-print: 
@@ -9,17 +10,17 @@ PI: Xiao-Ying Yu (yuxiaoying@ornl.gov)
 
 ### Quality control processing steps:
 1. Standardization
-    1.1. Header naming
-    1.2. Index formatting
-    1.3. Timestep completion
-    1.4. Null value assignment
+    - 1.1. Header naming
+    - 1.2. Index formatting
+    - 1.3. Timestep completion
+    - 1.4. Null value assignment
 2. Quality Control
-    2.1. Threshold-based integrity testing
-    2.2. Automated outlier detection
-    2.3. Manual outlier detection
+    - 2.1. Threshold-based integrity testing
+    - 2.2. Automated outlier detection
+    - 2.3. Manual outlier detection
 3. Gap-filling
-    3.1. Gap-filling with quality controlled hourly data
-    3.2. Linear interpolation of gaps <= 3 hours
+    - 3.1. Gap-filling with quality controlled hourly data
+    - 3.2. Linear interpolation of gaps <= 3 hours
 
 ---
 
@@ -47,31 +48,33 @@ Boolean table showing which values were gap-filled between final-qa and gapfille
 
 7. `supplementary.zip`
 This file contains supplementary data that was used during the quality control process. This include:
-- met_inst_ranges.csv (meteorological instrument ranges), which provides the min/max accepted range of each data variable. For reasoning behind these ranges, see the pre-print linked at the top of this readme.
-- met_towers_info.csv (meteorological towers information), which contains the coordinates, altitude of towers, and altitudes of sensors on each tower. Sensor height from the base of the tower is also included.
-- metadata.csv contains detailed information on the headers found in hourly-qc, original-qc, manual-outlier-id, final-qc, gapfilled-qc, and gapfilled-bool files. It includes short names, long names, descriptions, units, and data types of each meteorological variable. This table is very important for understanding the data in the files.
+    - met_inst_ranges.csv (meteorological instrument ranges), which provides the min/max accepted range of each data variable. For reasoning behind these ranges, see the pre-print linked at the top of this readme.
+    - met_towers_info.csv (meteorological towers information), which contains the coordinates, altitude of towers, and altitudes of sensors on each tower. Sensor height from the base of the tower is also included.
+    - metadata.csv contains detailed information on the headers found in hourly-qc, original-qc, manual-outlier-id, final-qc, gapfilled-qc, and gapfilled-bool files. It includes short names, long names, descriptions, units, and data types of each meteorological variable. This table is very important for understanding the data in the files.
+
+---
 
 ## Column Headers:
 More precise information can be found in metadata.csv. But here's a quick summary:
 ### Meteorological variable short name structure: `{Variable}{Unit}_{0-padded height}m`
-- TempC         Temperature in celsius
-- BarPresMb     Barometric pressure in millibars
-- WSpdMph       Wind speed in miles per hour
-- PkWSpdMph     Peak wind speed in miles per hour
-- VSSpdMph      Vertical wind speed in miles per hour
-- WDir          Wind direction in degrees from North
-- PrecipIn      Log of precipitation in inches
-- SolarRadWm2   Solar radiation in watts per meter-squared
-- AbsHum        Absolute humidity in grams per meter-cubed
-- RelHum        Relative humidity in percent
-- Sigma         Sigma Theta (the standard deviation of horizontal wind direction)
-- SigPhi        Sigma Phi (the standard deviation of 360 wind direction)
+- `TempC`         Temperature in celsius
+- `BarPresMb`     Barometric pressure in millibars
+- `WSpdMph`       Wind speed in miles per hour
+- `PkWSpdMph`     Peak wind speed in miles per hour
+- `VSSpdMph`      Vertical wind speed in miles per hour
+- `WDir`          Wind direction in degrees from North
+- `PrecipIn`      Log of precipitation in inches
+- `SolarRadWm2`   Solar radiation in watts per meter-squared
+- `AbsHum`        Absolute humidity in grams per meter-cubed
+- `RelHum`        Relative humidity in percent
+- `Sigma`         Sigma Theta (the standard deviation of horizontal wind direction)
+- `SigPhi`        Sigma Phi (the standard deviation of 360 wind direction)
 
 ## Towers:
 More precise information can be found in met_towers_info.csv. Here's a quick summary anyway:
-- TOWA  Tower A on ORNL campus
-- TOWB  Tower B on ORNL campus
-- TOWD  Tower D on ORNL campus
-- TOWF  Tower F on ridgetop ORNL campus
-- TOWS  Tower S on ridgetop Y12 campus
-- TOWY  Tower Y on Y12 campus
+- `TOWA`  Tower A on ORNL campus
+- `TOWB`  Tower B on ORNL campus
+- `TOWD`  Tower D on ORNL campus
+- `TOWF`  Tower F on ridgetop ORNL campus
+- `TOWS`  Tower S on ridgetop Y12 campus
+- `TOWY`  Tower Y on Y12 campus
