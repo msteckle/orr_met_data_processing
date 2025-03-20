@@ -1,0 +1,22 @@
+name: nsrd
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - astropy
+  - contextily
+  - dash
+  - dask
+  - geopandas
+  - jupyterlab
+  - more-itertools
+  - plotly
+  - pyarrow
+  - pymannkendall
+  - pyod
+  - scikit-learn
+  - scipy
+  - seaborn
+  - tabulate
+  - xarray
+prefix: /opt/homebrew/anaconda3/envs/nsrd
