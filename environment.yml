@@ -1,0 +1,19 @@
+name: orr_met_env
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.13.2
+  - matplotlib=3.9.2
+  - numpy=1.26.4
+  - pandas=2.2.3
+  - pytz=2024.1
+  - scipy=1.14.1
+  - seaborn=0.13.2
+  - dask=2024.8.2
+  - pymannkendall=1.4.3
+  - scikit-learn=1.5.1
+  - ephem=4.2
+  - pip
+  - pip:
+    - missingno=0.5.2
