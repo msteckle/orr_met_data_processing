@@ -57,6 +57,11 @@ conda env create -f environment.yml
 conda activate orr_met_env
 ```
 
+Alternatively, if you need to update an existing orr_met_env using the environment.yml:
+```bash
+conda env update -f environment.yml
+```
+
 ### 3. Download and Extract Data
 
 Run the provided bash script:
