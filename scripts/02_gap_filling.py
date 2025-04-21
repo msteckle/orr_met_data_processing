@@ -29,17 +29,17 @@ towers_of_interest = ['TOWA', 'TOWB', 'TOWD', 'TOWF', 'TOWS', 'TOWY']
 for tower in towers_of_interest:
 
     print(tower)
-    
+
     #15-minute data
     df_15m = pd.read_csv(f'../data/met_towers_2017-2022_final-qc/{tower}_2017-2022_final-qc.csv',
                          index_col=0, header=0, na_values=['-999.0', '#DIV/0!', -999])
     df_15m.index = pd.to_datetime(df_15m.index, format='%Y%m%d%H%M%S', utc=True)
-    
+
     # 60-minute data
     df_60m = pd.read_csv(f'../data/met_towers_2017-2022_hourly-qc/{tower}_2017-2022_hourly-qc.csv',
                          index_col=0, header=0, na_values=['-999.0', '#DIV/0!', -999])
     df_60m.index = pd.to_datetime(df_60m.index, format='%Y%m%d%H%M%S', utc=True)
-    
+
     tower_dfs_15m.append(df_15m)
     tower_dfs_60m.append(df_60m)
 
@@ -69,7 +69,7 @@ for i, (df_15m, df_60m, tname) in enumerate(zip(tower_dfs_15m, tower_dfs_60m, to
 
     # empty list to be filled with gap-filled columns
     gap_filled_cols = []
-    
+
     ##################################################################
     # find consecutive gaps in each column
     ##################################################################
@@ -81,34 +81,34 @@ for i, (df_15m, df_60m, tname) in enumerate(zip(tower_dfs_15m, tower_dfs_60m, to
         dstart = []
         dend = []
         idxs = []
-        
+
         # print(f'{tname}: {col_name}')
         missing_data = df_15m[col_name].isnull()
         consecutive_missing = []
         for column, g in groupby(enumerate(missing_data), lambda x: x[1]):
             if column:
                 consecutive_missing.append(list(map(lambda x: x[0], list(g))))
-    
+
         # save missing time periods
         for lst in consecutive_missing:
-    
+
             # gaps in time
             steps = len(lst)
             mins = steps*15
             hours = mins/60
             start = lst[0]
             end = lst[-1]
-    
+
             # append gap lengths, start of gap, end of gap, idxs
             length.append(hours)
             dstart.append(df_15m.iloc[start,:].name)
             dend.append(df_15m.iloc[end,:].name)
             idxs.append(lst)
-    
+
         ##################################################################
         # gap-fill each column
         ##################################################################
-        
+
         # create dataframe of missing data
         missing_data = pd.DataFrame(length, columns=['gap_length_hrs'])
         missing_data['tower'] = tname
@@ -116,7 +116,7 @@ for i, (df_15m, df_60m, tname) in enumerate(zip(tower_dfs_15m, tower_dfs_60m, to
         missing_data['gap_start_date'] = dstart
         missing_data['gap_end_date'] = dend
         missing_data['indexes'] = idxs
-    
+
         # group gaps into gap types: small, medium, large
         mid_gaps = missing_data[(missing_data['gap_length_hrs'] >= 3) & (missing_data['gap_length_hrs'] <= 6)]
         big_gaps = missing_data[missing_data['gap_length_hrs'] > 6]
@@ -125,7 +125,7 @@ for i, (df_15m, df_60m, tname) in enumerate(zip(tower_dfs_15m, tower_dfs_60m, to
         #-----------------------------------------------------------------#
         # (1) fill gaps with hourly data
         main_gaps = pd.concat([sml_gaps, mid_gaps, big_gaps])
-        
+
         # flatten 2D list of NaN indices
         idx_lst = main_gaps['indexes'].to_list()
         idx_lst = [x for lst in idx_lst for x in lst]
@@ -166,18 +166,18 @@ tdfs_15m_gapfilled_linear = []
 def add_buffer(df_15m, col_name, buffer_hours=3):
     df_15m.index = pd.to_datetime(df_15m.index)
     mean_buffer = df_15m.groupby([df_15m.index.month, df_15m.index.day, df_15m.index.hour])[col_name].median()
-    
+
     start_date = df_15m.index[0] - pd.Timedelta(hours=buffer_hours)
     start_buffer = [mean_buffer[(start_date.month, start_date.day, hour)] for hour in range(start_date.hour, start_date.hour + buffer_hours)]
-    
+
     end_date = df_15m.index[-1] + pd.Timedelta(hours=buffer_hours)
     end_buffer = [mean_buffer[(end_date.month, end_date.day, hour)] for hour in range(end_date.hour - buffer_hours + 1, end_date.hour + 1)]
-    
+
     buffer_start = pd.Series(start_buffer, index=pd.date_range(start=start_date, periods=buffer_hours, freq='h'))
     buffer_end = pd.Series(end_buffer, index=pd.date_range(start=df_15m.index[-1] + pd.Timedelta(hours=1), periods=buffer_hours, freq='h'))
-    
+
     df_with_buffer = pd.concat([buffer_start, df_15m[col_name], buffer_end])
-    
+
     return df_with_buffer
 
 def rolling_clip(series, window=48, threshold=1.5):
@@ -199,7 +199,7 @@ for i, (df_15m, tname) in enumerate(zip(tdfs_15m_gapfilled, towers_of_interest))
     gap_filled_cols_linear = []
 
     for col_name in df_15m.columns.to_list():
-        
+
         df_15m_col = df_15m[[col_name]].copy()
 
         try:
@@ -252,10 +252,10 @@ for df in tdfs_15m_gapfilled_linear:
     # Iterate over each sensor in the `oor` table
     for sensor, limits in oor.iterrows():
         min_val, max_val = limits['Min'], limits['Max']
-        
+
         # Find columns in the DataFrame that start with the sensor string
         matching_columns = [col for col in df.columns if col.startswith(sensor)]
-        
+
         # Apply capping to the matching columns
         for col in matching_columns:
             if np.isfinite(min_val):  # Apply min limit if it's not -inf
@@ -267,10 +267,10 @@ for df in tdfs_15m_gapfilled_pchip:
     # Iterate over each sensor in the `oor` table
     for sensor, limits in oor.iterrows():
         min_val, max_val = limits['Min'], limits['Max']
-        
+
         # Find columns in the DataFrame that start with the sensor string
         matching_columns = [col for col in df.columns if col.startswith(sensor)]
-        
+
         # Apply capping to the matching columns
         for col in matching_columns:
             if np.isfinite(min_val):  # Apply min limit if it's not -inf
@@ -324,7 +324,7 @@ def rename_columns(df, conversions):
                 else:
                     new_name = value
         renamed_columns[col] = new_name
-    
+
     # Return a new DataFrame with renamed columns
     return df.rename(columns=renamed_columns, inplace=False)
 
@@ -337,7 +337,7 @@ for tdf, tdf_gf_linear, tdf_gf_pchip in zip(tower_dfs_15m, tdfs_15m_gapfilled_li
     renamed_tdf = rename_columns(tdf, label_conversions)      # Get renamed DataFrame for tdf
     renamed_tdf_gf_linear = rename_columns(tdf_gf_linear, label_conversions)  # Get renamed DataFrame for tdf_gf
     renamed_tdf_gf_pchip = rename_columns(tdf_gf_pchip, label_conversions)
-    
+
     # Add the renamed DataFrames to the lists
     renamed_dfs_15m.append(renamed_tdf)
     renamed_dfs_15m_gf_linear.append(renamed_tdf_gf_linear)
@@ -368,7 +368,7 @@ def plot_missing_data_with_sparkline(data, ax_matrix, ax_sparkline, title):
     msno.matrix(data, ax=ax_matrix, sparkline=False, fontsize=16, color=(0.5, 0.5, 0.5))
     # Adjust the title to be fully left-justified
     ax_matrix.set_title(title, fontsize=24, loc='left', x=-0.09)
-    
+
     # Remove y-axis tick labels from the matrix plot
     y_positions = [-0.5, 35040, 70080, 105120, 140160, 175296, 210335.5]
     years = [2017, 2018, 2019, 2020, 2021, 2022, 2023]
@@ -377,14 +377,14 @@ def plot_missing_data_with_sparkline(data, ax_matrix, ax_sparkline, title):
             ax_matrix.axhline(y=tick, c='black', ls='--', lw=1)
     ax_matrix.set_yticks(y_positions)
     ax_matrix.set_yticklabels(years)
-    
+
     # Calculate missing values per timestamp and plot as a sparkline
     missing_counts = data.isna().sum(axis=1)
     ax_sparkline.plot(missing_counts, missing_counts.index, color=(0.5, 0.7, 0.5))
     ax_sparkline.set_title('Missing Data Sparkline', fontsize=14)
     ax_sparkline.set_xlabel('Missing Count', fontsize=14)
     ax_sparkline.set_xlim(0, len(data.columns))
-    
+
     # Reverse the y-axis so the oldest year is at the top
     ax_sparkline.invert_yaxis()
     ax_sparkline.grid(axis='y', color='black', ls='--', lw=1)
@@ -515,10 +515,17 @@ export_file = tdfs_15m_gapfilled_linear
 
 # export gap-filled data
 for tdf, tower in zip(export_file, towers_of_interest):
+
+    output_dir = '../data/met_towers_2017-2022_gapfilled-qc'
+    os.makedirs(output_dir, exist_ok=True)   # ← create it if it doesn’t exist
+
+    # now it will succeed
     tdf.index = tdf.index.strftime('%Y%m%d%H%M%S')
-    tdf = tdf.fillna(-999)
-    tdf = tdf.astype('float32')
-    tdf.to_csv(f'../data/met_towers_2017-2022_gapfilled-qc/{tower}_2017-2022_gapfilled-qc.csv', encoding='utf-8-sig')
+    tdf = tdf.fillna(-999).astype('float32')
+    tdf.to_csv(
+        os.path.join(output_dir, f'{tower}_2017-2022_gapfilled-qc.csv'),
+        encoding='utf-8-sig'
+    )
 
 
 # In[16]:
@@ -532,8 +539,14 @@ for df_orig, df_filled, tower in zip(tower_dfs_15m, export_file, towers_of_inter
     bool_df = (df_orig.fillna(-999)).ne(df_filled.fillna(-999))
     bool_df.columns.name = None
     bool_df = bool_df.astype('float32')
-    bool_df.to_csv(f'../data/met_towers_2017-2022_gapfilled-bool/{tower}_2017-2022_gapfilled-bool.csv',
-                   index_label='timestampUTC', encoding='utf-8-sig')
+
+    output_dir = '../data/met_towers_2017-2022_gapfilled-bool'
+    os.makedirs(output_dir, exist_ok=True)   # ← create it if it doesn’t exist
+    bool_df.to_csv(
+        os.path.join(output_dir, f'{tower}_2017-2022_gapfilled-bool.csv'),
+        index_label='timestampUTC',
+        encoding='utf-8-sig'
+    )
 
 
 # ## 5. Compare original data with gap-filled data
@@ -568,7 +581,7 @@ gf_df = pd.read_csv(f'../data/met_towers_2017-2022_gapfilled-qc/{example_tower}_
 gf_df2 = rename_columns(gf_df, label_conversions)
 
 
-# In[22]:
+# In[19]:
 
 
 # Ensure directory exists
@@ -589,7 +602,7 @@ tower_letter = example_tower[-1]  # Extract the last character from `example_tow
 for col in gf_df2.columns:
     if col == time_column:
         continue  # Skip time column
-    
+
     # Extract variable name and parentheses for y-axis label
     y_label_match = re.match(r'^[^()]+(?:\s*\([^)]*\))?', col)  # Match variable name with parentheses
     y_label = y_label_match.group(0).strip() if y_label_match else col  # Includes parentheses
@@ -603,7 +616,7 @@ for col in gf_df2.columns:
 
     # Start plotting
     fig, axes = plt.subplots(2, 1, figsize=(6, 8), sharex=True)
-    
+
     # Plot from og_df if the column exists, otherwise show placeholder text
     if col in og_df2.columns:
         axes[0].plot(og_df2[time_column], og_df2[col], color=(0.4, 0.6, 0.8), lw=0.5)
@@ -613,7 +626,7 @@ for col in gf_df2.columns:
                      horizontalalignment='center', verticalalignment='center', 
                      transform=axes[0].transAxes, fontsize=12, color='red')
         axes[0].set_title(f"(A) Original Tower {tower_letter} data at {height} sensor height")
-    
+
     # Plot from gf_df
     axes[1].plot(gf_df2[time_column], gf_df2[col], color=(0.4, 0.6, 0.8), lw=0.5)
     axes[1].set_title(f"(B) Gap-filled Tower {tower_letter} data at {height} sensor height")
@@ -646,10 +659,6 @@ for col in gf_df2.columns:
 # In[20]:
 
 
-# import pandas as pd
-# import numpy as np
-# import random
-
 # # List of names to check for in column names
 # names = [
 #     "DT", "MixHeight", "MixRatio", "SatMixRatio", "SatVaporPres", "SonicTemp", "StabSigPhi", "StabSRDT", 
@@ -666,7 +675,7 @@ for col in gf_df2.columns:
 # for idx, df in enumerate(tdfs_15m_gapfilled_linear):
 #     # Dictionary to store random samples for the current DataFrame
 #     df_samples = {}
-    
+
 #     # Loop through each column in the DataFrame
 #     for column in df.columns:
 #         # Check if the column name contains any string from the names list
@@ -674,11 +683,11 @@ for col in gf_df2.columns:
 #             print(column)
 #             # Extract non-NaN values from the column
 #             non_nan_values = df[column].dropna().tolist()
-            
+
 #             # If there are at least 10 non-NaN values, take a random sample
 #             if len(non_nan_values) >= 10:
 #                 df_samples[column] = random.sample(non_nan_values, 10)
-    
+
 #     # Store the samples for the current DataFrame
 #     if df_samples:  # Only include DataFrames with matching columns
 #         results[f"DataFrame_{idx}"] = df_samples

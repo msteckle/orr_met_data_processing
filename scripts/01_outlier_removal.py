@@ -4,18 +4,16 @@
 # In[1]:
 
 
-import datetime
 import math
 import os
 import warnings
 from datetime import datetime
+import collections
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from pytz import timezone
-import pandas as pd
-import numpy as np
 
 
 # In[2]:
@@ -102,7 +100,7 @@ def mask_rapid_roc(tdf):
         in_df[colname].mask(sdf[roc] > limit) # mask any numbers greater than diff limit
         out_df = pd.DataFrame(in_df[colname])
         return out_df # return masked column as dataframe
-    
+
     for colname in tdf.columns.to_list():
         name = colname.split('_')[0]
         if name == 'TempC':
@@ -143,7 +141,7 @@ def mm_to_in(precipMm):
 def ms_to_mph(spdMs):
     spdMph = spdMs * 2.237
     return spdMph
-    
+
 # pressure conversions
 def mb_to_in(barPresMb):
     barPresIn = barPresMb * 0.0295301
@@ -181,37 +179,37 @@ def absHum(vaporPres, tempK):
 
 # function to calculate missing columns
 def calc_missing_cols(tower_dfs):
-    
+
     i = 0
     tower_dfs_out = []
     for df in tower_dfs:
-    
+
         print(f'Tower #{i}')
         df = df.astype(np.float32)
         colnames = df.columns
         heights = set([colname.split('_')[1] for colname in colnames])
-        
+
         for height in heights:
-    
+
             # temperature vars
             TempC_present = f'TempC_{height}' in colnames
             if not TempC_present:
-                
+
                 TempF_present = f'TempF_{height}' in colnames
                 TempK_present = f'TempK_{height}' in colnames
                 if TempF_present:
                     tc = f'TempC_{height}'
                     refcol = f'TempF_{height}'
                     df[tc] = df[refcol].apply(tempf_to_tempc)
-                    
+
                 elif TempK_present:
                     tc = f'TempC_{height}'
                     refcol = f'TempK_{height}'
                     df[tc] = df[refcol].apply(tempk_to_tempc)
-        
+
                 else:
                     pass
-        
+
             TempK_present = f'TempK_{height}' in colnames
             if TempC_present and not TempK_present:
                 tk = f'TempK_{height}'
@@ -219,7 +217,7 @@ def calc_missing_cols(tower_dfs):
                 df[tk] = df[refcol].apply(tempc_to_tempk)
             else:
                 pass
-    
+
             # precipitation vars
             PrecipIn_present = f'PrecipIn_{height}' in colnames
             PrecipMm_present = f'PrecipMm_{height}' in colnames
@@ -229,7 +227,7 @@ def calc_missing_cols(tower_dfs):
                 df[pi] = df[refcol].apply(mm_to_in)
             else:
                 pass
-    
+
             # pressure vars
             BarPresMb_present = f'BarPresMb_{height}' in colnames
             BarPresIn_present = f'BarPresIn_{height}' in colnames
@@ -243,7 +241,7 @@ def calc_missing_cols(tower_dfs):
                 df[bpm] = df[refcol].apply(in_to_mb)
             else:
                 pass
-    
+
             # speed vars
             WSpdMs_present = f'WSpdMs_{height}' in colnames
             WSpd_present = f'WSpdMph_{height}' in colnames
@@ -273,7 +271,7 @@ def calc_missing_cols(tower_dfs):
             PkWSpd_present = f'PkWSpd_{height}' in colnames
             if PkWSpd_present:
                 df = df.rename(columns={f'PkWSpd_{height}':f'PkWSpdMph_{height}'})
-    
+
             # solar radiation vars
             SolarRadLang_present = f'SolarRadLang_{height}' in colnames
             SolarRadWm2_present = f'SolarRadWm2_{height}' in colnames
@@ -281,7 +279,7 @@ def calc_missing_cols(tower_dfs):
                 srw = f'SolarRadWm2_{height}'
                 refcol = f'SolarRadLang_{height}'
                 df[srw] = df[refcol].apply(lang_to_wm2)
-    
+
             # absolute humidity
             AbsHum_present = f'AbsHum_{height}' in colnames
             if not AbsHum_present:
@@ -289,35 +287,35 @@ def calc_missing_cols(tower_dfs):
                 BarPresIn_present = f'BarPresIn_{height}' in colnames
                 RelHum_present = f'RelHum_{height}' in colnames
                 if TempK_present and BarPresIn_present and RelHum_present:
-                    
+
                     # in vars
                     rh = f'RelHum_{height}'
                     bpi = f'BarPresIn_{height}'
                     tk = f'TempK_{height}'
-                    
+
                     # saturated vapor pressure
                     svp = f'SatVaporPres_{height}'
                     df[svp] = df[tk].apply(satVaporPres)
-                    
+
                     # saturated mixing ratio
                     smr = f'SatMixRatio_{height}'
                     df[smr] = df.apply(lambda x: satMixRatio(x[svp], x[bpi]), axis=1)
-                                       
+
                     # mixing ratio
                     mr = f'MixRatio_{height}'
                     df[mr] = df.apply(lambda x: mixRatio(x[rh], x[smr]), axis=1)
-                                      
+
                     # vapor pressure
                     vp = f'VaporPres_{height}'
                     df[vp] = df.apply(lambda x: vaporPres(x[bpi], x[mr]), axis=1)
-                                      
+
                     # absolute humidity
                     ah = f'AbsHum_{height}'
                     df[ah] = df.apply(lambda x: absHum(x[vp], x[tk]), axis=1)
-    
+
         tower_dfs_out.append(df)
         i += 1
-        
+
     return tower_dfs_out
 
 
@@ -365,11 +363,11 @@ oor = oor[['Min', 'Max']]
 # for df, tower in zip(tower_dfs_60m, towers_of_interest):
 
 #     print(tower)
-    
+
 #     # rename date columns
 #     df = df.rename(columns={'Unnamed: 0':'year', 'Unnamed: 1':'month', 'Unnamed: 2':'day', 'Unnamed: 3':'hour'})
 #     df[['year', 'month', 'day', 'hour']] = (df[['year', 'month', 'day', 'hour']].astype(int)).astype(str)
-    
+
 #     # clean issues
 #     df['hour'] = (df.hour.astype(int) - 1).astype(str)
 #     df['year'] = np.where(df.year.str.contains('7'), '2017', df.year)
@@ -521,7 +519,7 @@ for df in tower_dfs_60m_6:
         cols = [f'{x}_{height}' for x in cols_oi]
         temp_list.append(cols)
     temp_list = [x for sublst in temp_list for x in sublst]
-          
+
     # check for these columns
     col_list = []
     for col in colnames:
@@ -555,13 +553,19 @@ for df, tower in zip(tower_dfs_60m_7, towers_of_interest):
 tower_dfs_60m_8[0].head(3)
 
 
-# In[23]:
+# In[24]:
 
 
 for df, tower in zip(tower_dfs_60m_8, towers_of_interest):
-    df = df.fillna(-999)
-    df = df.astype('float32')
-    df.to_csv(f'../data/met_towers_2017-2022_hourly-qc/{tower}_2017-2022_hourly-qc.csv', encoding='utf-8-sig')
+    output_dir = '../data/met_towers_2017-2022_hourly-qc'
+    os.makedirs(output_dir, exist_ok=True)   # ← create it if it doesn’t exist
+
+    # now it will succeed
+    df = df.fillna(-999).astype('float32')
+    df.to_csv(
+        os.path.join(output_dir, f'{tower}_2017-2022_hourly-qc.csv'),
+        encoding='utf-8-sig'
+    )
 
 
 # ---
@@ -569,13 +573,13 @@ for df, tower in zip(tower_dfs_60m_8, towers_of_interest):
 
 # ### 1. Load 15-minute interannual tables
 
-# In[24]:
+# In[25]:
 
 
 towers_of_interest = ['TOWA', 'TOWB', 'TOWD', 'TOWF', 'TOWS', 'TOWY']
 
 
-# In[25]:
+# In[26]:
 
 
 # read 15-min multiannual data
@@ -591,7 +595,7 @@ for tname in towers_of_interest:
 
 # ### 2. Fill gaps in 15-minute time intervals
 
-# In[26]:
+# In[27]:
 
 
 # standardize timesteps
@@ -600,7 +604,7 @@ tower_dfs_15m_2 = standardize_dateranges(tower_dfs_15m, '15Min', '2017-01-01 00:
 
 # ### 3. Calculate missing columns
 
-# In[27]:
+# In[28]:
 
 
 tower_dfs_15m_3 = calc_missing_cols(tower_dfs_15m_2)
@@ -608,7 +612,7 @@ tower_dfs_15m_3 = calc_missing_cols(tower_dfs_15m_2)
 
 # ### 4. Select variables of interest and drop unneccessary ones
 
-# In[28]:
+# In[29]:
 
 
 tower_dfs_15m_4 = []
@@ -622,7 +626,7 @@ for df in tower_dfs_15m_3:
         cols = [f'{x}_{height}' for x in cols_oi]
         temp_list.append(cols)
     temp_list = [x for sublst in temp_list for x in sublst]
-          
+
     # check for these columns
     col_list = []
     for col in colnames:
@@ -635,7 +639,7 @@ for df in tower_dfs_15m_3:
     tower_dfs_15m_4.append(df)
 
 
-# In[29]:
+# In[31]:
 
 
 # export "original" data that are lightly quality controlled
@@ -647,25 +651,32 @@ for df, tower in zip(tower_dfs_15m_4, towers_of_interest):
     out_df['timestampUTC'] = out_df.index.tz_convert('UTC').strftime('%Y%m%d%H%M%S')
     out_df = out_df.reset_index(drop=True)
     out_df = out_df.set_index('timestampUTC')
-    out_df = out_df.fillna(-999)
-    out_df = out_df.astype('float32')
-    out_df.to_csv(f'../data/met_towers_2017-2022_original-qc/{tower}_2017-2022_original-qc.csv', encoding='utf-8-sig')
+
+    output_dir = '../data/met_towers_2017-2022_original-qc'
+    os.makedirs(output_dir, exist_ok=True)   # ← create it if it doesn’t exist
+
+    # now it will succeed
+    out_df = out_df.fillna(-999).astype('float32')
+    out_df.to_csv(
+        os.path.join(output_dir, f'{tower}_2017-2022_original-qc.csv'),
+        encoding='utf-8-sig'
+    )
 
 
 # ### 5(a). Remove constant values
 
-# In[30]:
+# In[32]:
 
 
 def replace_long_repeats(series, column_name):
-    
+
     if column_name.startswith('PrecipIn') or column_name.startswith('SolarRadWm2'):
         # Only consider non-zero values for replacement
         mask = (series != series.shift()) | (series == 0)
     else:
         # Identify repeated values
         mask = series != series.shift()
-        
+
     # Find the start of each group
     group_starts = mask.cumsum()
     # Group by these start points
@@ -677,7 +688,7 @@ def replace_long_repeats(series, column_name):
         series[(duration >= 360) & (series != 0)] = np.nan
     else:
         series[duration >= 360] = np.nan
-    
+
     return series
 
 # Apply the function to the DataFrame
@@ -689,13 +700,13 @@ for df in tower_dfs_15m_4:
 
 # ### 5(b). Mask values outside of normal range
 
-# In[31]:
+# In[33]:
 
 
 oor.head(5)
 
 
-# In[32]:
+# In[34]:
 
 
 # prepare dataframe by adding associated min/max to variables (where applicable)
@@ -711,13 +722,13 @@ for df in tower_dfs_15m_5:
     tower_dfs_15m_6.append(out_df)
 
 
-# In[33]:
+# In[35]:
 
 
 tower_dfs_15m_6[0].tail(5)
 
 
-# In[34]:
+# In[36]:
 
 
 # mask values outside of limits
@@ -732,13 +743,13 @@ for df in tower_dfs_15m_6:
 
 # ### 6. Mask values that change too rapidly in an hour
 
-# In[35]:
+# In[37]:
 
 
 roc
 
 
-# In[36]:
+# In[38]:
 
 
 # mask values that change too rapidly in an hour
@@ -748,19 +759,19 @@ for df in tower_dfs_15m_7:
     tower_dfs_15m_8.append(out_df)
 
 
-# In[37]:
+# In[39]:
 
 
 tower_dfs_15m_8[0].head(3)
 
 
-# In[38]:
+# In[40]:
 
 
 tower_dfs_15m_8[0].columns
 
 
-# In[39]:
+# In[41]:
 
 
 # # single-tower rolling window
@@ -772,26 +783,26 @@ tower_dfs_15m_8[0].columns
 #     return rolling_mean, outliers
 
 # def plot_variable_data_with_outliers(df, tname, var, window_sizes, zscore_threshold):
-    
+
 #     for column in df.columns:
-        
+
 #         if column.startswith(var):
 
 #             all_outliers = {}
 #             for window_size in window_sizes:
-                
+
 #                 plt.figure(figsize=(12, 6))
-                
+
 #                 # Calculate rolling mean and detect outliers
 #                 rolling_mean, outliers = rolling_window_outlier_detection(df[column], window_size, zscore_threshold)
-                
+
 #                 # Plot original data
 #                 plt.plot(df.index, df[column], label='Original Data', alpha=0.5, zorder=1)
 #                 plt.plot(rolling_mean.index, rolling_mean, label=f'Rolling Mean ({window_size})', color='orange', zorder=2)
-                
+
 #                 outlier_points = df[column][outliers]
 #                 plt.scatter(df.index[outliers], outlier_points, color='red', label='Outliers', zorder=3)
-                
+
 #                 plt.title(f'{tname}: {column}')
 #                 plt.xlim(datetime(2017, 1, 1), datetime(2022, 12, 31))
 #                 plt.legend(loc='upper left')
@@ -807,44 +818,44 @@ tower_dfs_15m_8[0].columns
 #         single_tower_outliers = plot_variable_data_with_outliers(df, tname, var, window_sizes, zscore_threshold)
 
 
-# In[40]:
+# In[42]:
 
 
 # Rolling window outlier detection function for non-circular data
 def rolling_window_outlier_detection(data, window_size, z_threshold):
     rolling_means = data.rolling(window=window_size, center=True).mean()
     rolling_stds = data.rolling(window=window_size, center=True).std()
-    
+
     overall_mean = rolling_means.mean(axis=1)
     overall_std = rolling_stds.mean(axis=1)
-    
+
     outliers = pd.DataFrame(index=data.index, columns=data.columns, dtype=bool)
-    
+
     for column in data.columns:
         individual_zscores = (data[column] - rolling_means[column]) / rolling_stds[column]
         combined_zscores = (data[column] - overall_mean) / overall_std
-        
+
         individual_outliers = np.abs(individual_zscores) > z_threshold
         combined_outliers = np.abs(combined_zscores) > z_threshold
-        
+
         confirmed_outliers = individual_outliers & combined_outliers
         outliers[column] = confirmed_outliers
 
     return outliers, rolling_means
 
 
-# In[41]:
+# In[43]:
 
 
 # Updated extract variable data by height function
 def extract_variable_data_by_height(towers_data, tower_names):
     combined_data = {}
-    
+
     # Define tower groups
     group1 = ['TOWA', 'TOWB', 'TOWD']
     group2 = ['TOWF', 'TOWS']
     group3 = ['TOWY']
-    
+
     # Helper function to determine group
     def get_group(tower_name):
         if tower_name in group1:
@@ -863,19 +874,19 @@ def extract_variable_data_by_height(towers_data, tower_names):
             group = get_group(tower_name)
             combined_key = (variable_type, height, group)
             col_name = f"{tower_name}_{height}"
-            
+
             if combined_key not in combined_data:
                 combined_data[combined_key] = []
             combined_data[combined_key].append(tower_df[column].rename(col_name))
-    
+
     # Concatenate data for each combined key
     for key in combined_data.keys():
         combined_data[key] = pd.concat(combined_data[key], axis=1)
-    
+
     return combined_data
 
 
-# In[42]:
+# In[44]:
 
 
 # Function to plot variable data for window sizes with outlier detection
@@ -884,9 +895,9 @@ def plot_variable_data_for_window_sizes(towers_data, tower_names, var, tower, wi
 
     all_outliers_heights = {}
     for height in set(col.split('_')[1] for col in towers_data[tower_names.index(tower)].columns if col.startswith(var)):
-        
+
         column = f"{tower}_{height}"
-        
+
         # Choose the appropriate key for the specified tower
         group = 'others'
         if tower in ['TOWA', 'TOWB', 'TOWD']:
@@ -895,28 +906,28 @@ def plot_variable_data_for_window_sizes(towers_data, tower_names, var, tower, wi
             group = 'group2'
         elif tower == 'TOWY':
             group = 'group3'
-        
+
         key = (var, height, group)
-        
+
         if key not in combined_data:
             continue
-        
+
         data = combined_data[key]
-        
+
         if f"{tower}_{height}" not in data.columns:
             continue
-        
+
         towers_used = []
         for tower_name in tower_names:
             if f"{tower_name}_{height}" in data.columns:
                 towers_used.append(f"{tower_name}_{height}")
-        
+
         all_outliers = {}
         for window_size in window_sizes:
 
             # Handle other variables
             outliers, rolling_means = rolling_window_outlier_detection(data, window_size, z_threshold)
-            
+
             fig, ax1 = plt.subplots(figsize=(12, 6))
 
             ax1.plot(data.index, data[column], label='Original Data', alpha=0.5, zorder=1)
@@ -938,7 +949,7 @@ def plot_variable_data_for_window_sizes(towers_data, tower_names, var, tower, wi
             all_outliers[window_size] = outlier_points.index
 
         all_outliers_heights[height] = all_outliers
-        
+
     return all_outliers_heights
 
 
@@ -946,7 +957,7 @@ def plot_variable_data_for_window_sizes(towers_data, tower_names, var, tower, wi
 # ---
 # ### Testing
 
-# In[43]:
+# In[45]:
 
 
 # # test z_thresholds and window sizes
@@ -963,7 +974,7 @@ def plot_variable_data_for_window_sizes(towers_data, tower_names, var, tower, wi
 # multi_tower_outliers = plot_variable_data_for_window_sizes(towers_data, tower_names, var, tower, window_sizes, z_threshold)
 
 
-# In[44]:
+# In[46]:
 
 
 # def get_random_sample(datetimes, proportion):
@@ -971,14 +982,14 @@ def plot_variable_data_for_window_sizes(towers_data, tower_names, var, tower, wi
 #     return random.sample(datetimes, sample_size)
 
 # def sample_dict(dict, proportion=0.2, selected_key=None):
-        
+
 #     key = selected_key
 #     if selected_key:
 
 #         dict = [dt.strftime('%Y-%m-%d %H:%M:%S') for dt in dict[key]]
-        
+
 #         dict_sample = get_random_sample(dict, proportion)
-        
+
 #         print(f"Key: {key}")
 #         print(f"Sampled outliers in dict: {sorted(dict_sample)}")
 #         print(f"Number of outliers in dict: {len(sorted(dict))}")
@@ -991,7 +1002,7 @@ def plot_variable_data_for_window_sizes(towers_data, tower_names, var, tower, wi
 # sample_dict(multi_tower_outliers['015m'], 0.2, '3D')
 
 
-# In[45]:
+# In[47]:
 
 
 # def calculate_cartesian_coordinates(wind_speed, wind_dir_deg):
@@ -1001,10 +1012,10 @@ def plot_variable_data_for_window_sizes(towers_data, tower_names, var, tower, wi
 #     return U, V
 
 # def plot_wind_data(towers_data, tower_names, tower, eps=0.95, min_samples=2):
-    
+
 #     combined_data = extract_variable_data_by_height(towers_data, tower_names)
 #     outlier_datetimes_by_height = []
-    
+
 #     for height in set(col.split('_')[1] for col in towers_data[tower_names.index(tower)].columns):
 
 #         # Loop thru heights (e.g., 15m and 30m)
@@ -1019,27 +1030,27 @@ def plot_variable_data_for_window_sizes(towers_data, tower_names, var, tower, wi
 #             group = 'group3'
 #         else:
 #             group = 'others'
-        
+
 #         key_wind = ('WSpdMph', height, group)
 #         key_dir = ('WDir', height, group)
-        
+
 #         if key_wind in combined_data and key_dir in combined_data:
-            
+
 #             data_wind = combined_data[key_wind]
 #             data_dir = combined_data[key_dir]
-            
+
 #             col = f'{tower}_{height}'
-            
+
 #             if col in data_wind.columns and col in data_dir.columns:
 
 #                 for towerheight in data_wind.columns:
-                
+
 #                     wind_speed_data = data_wind[towerheight]
 #                     wind_dir_data = data_dir[towerheight]
 
 #                     # Calculate Cartesian coordinates
 #                     U, V = calculate_cartesian_coordinates(wind_speed_data, wind_dir_data)
-                
+
 #                     # Remove rows with NaN values
 #                     nan_indices = np.isnan(U) | np.isnan(V)
 #                     U_clean = U[~nan_indices]
@@ -1052,13 +1063,13 @@ def plot_variable_data_for_window_sizes(towers_data, tower_names, var, tower, wi
 #                     print(f'Clustering {towerheight}')
 #                     X = np.column_stack((U_clean, V_clean))
 #                     clustering = DBSCAN(eps=eps, min_samples=min_samples).fit(X)
-                
+
 #                     # Detect outliers
 #                     outlier_indices = clustering.labels_ == -1  # mask, -1 indicates outlier points (True)
 #                     outlier_dates = data_wind.index[~nan_indices][outlier_indices].tolist()
 #                     for date in outlier_dates:
 #                         outlier_counts[date][group].append(towerheight)
-                
+
 #                 # Identify points where multiple towers in the same group have outliers at the same datetime
 #                 outlier_datetimes = []
 #                 for date, towerheight in outlier_counts.items():
@@ -1079,7 +1090,7 @@ def plot_variable_data_for_window_sizes(towers_data, tower_names, var, tower, wi
 #                     hoverinfo='skip',
 #                     name='Normal Points'
 #                 ))
-                
+
 #                 # Add outliers
 #                 fig.add_trace(go.Scatter(
 #                     x=Udata.loc[Udata.index.isin(outlier_datetimes)], 
@@ -1090,7 +1101,7 @@ def plot_variable_data_for_window_sizes(towers_data, tower_names, var, tower, wi
 #                     hovertemplate='Outlier Datetime: %{customdata}<br>U: %{x}<br>V: %{y}<extra></extra>',
 #                     name='Outliers'
 #                 ))
-                
+
 #                 # Update layout
 #                 fig.update_layout(
 #                     title=f'{tower}: Wind Speed Components at Height {height}',
@@ -1117,44 +1128,44 @@ def plot_variable_data_for_window_sizes(towers_data, tower_names, var, tower, wi
 # 5. Determine which variables are best suited for manual outlier removal (Sigma, SigPhi, VSSpdMph)
 # 6. Determine which variables need a unique approach (WDir)
 
-# In[46]:
+# In[48]:
 
 
 # Rolling window outlier detection function for non-circular data
 def rolling_window_outlier_detection(data, window_size, z_threshold):
     rolling_means = data.rolling(window=window_size, center=True).mean()
     rolling_stds = data.rolling(window=window_size, center=True).std()
-    
+
     overall_mean = rolling_means.mean(axis=1)
     overall_std = rolling_stds.mean(axis=1)
-    
+
     outliers = pd.DataFrame(index=data.index, columns=data.columns, dtype=bool)
-    
+
     for column in data.columns:
         individual_zscores = (data[column] - rolling_means[column]) / rolling_stds[column]
         combined_zscores = (data[column] - overall_mean) / overall_std
-        
+
         individual_outliers = np.abs(individual_zscores) > z_threshold
         combined_outliers = np.abs(combined_zscores) > z_threshold
-        
+
         confirmed_outliers = individual_outliers & combined_outliers
         outliers[column] = confirmed_outliers
 
     return outliers, rolling_means
 
 
-# In[47]:
+# In[49]:
 
 
 # Updated extract variable data by height function
 def extract_variable_data_by_height(towers_data, tower_names):
     combined_data = {}
-    
+
     # Define tower groups
     group1 = ['TOWA', 'TOWB', 'TOWD']
     group2 = ['TOWF', 'TOWS']
     group3 = ['TOWY']
-    
+
     # Helper function to determine group
     def get_group(tower_name):
         if tower_name in group1:
@@ -1173,33 +1184,32 @@ def extract_variable_data_by_height(towers_data, tower_names):
             group = get_group(tower_name)
             combined_key = (variable_type, height, group)
             col_name = f"{tower_name}_{height}"
-            
+
             if combined_key not in combined_data:
                 combined_data[combined_key] = []
             combined_data[combined_key].append(tower_df[column].rename(col_name))
-    
+
     # Concatenate data for each combined key
     for key in combined_data.keys():
         combined_data[key] = pd.concat(combined_data[key], axis=1)
-    
+
     return combined_data
 
 
-# In[48]:
+# In[50]:
 
 
 # Function to plot variable data for window sizes with outlier detection
-import collections
 def plot_variable_data_for_window_sizes(towers_data, tower_names, var, tower):
-    
+
     combined_data = extract_variable_data_by_height(towers_data, tower_names)
     all_outliers = collections.defaultdict(dict)
-    
+
     for height in set(col.split('_')[1] for col in towers_data[tower_names.index(tower)].columns if col.startswith(var)):
-        
+
         column = f"{tower}_{height}"
         # print(tower, var, height)
-        
+
         # Choose the appropriate key for the specified tower
         group = 'others'
         if tower in ['TOWA', 'TOWB', 'TOWD']:
@@ -1208,11 +1218,11 @@ def plot_variable_data_for_window_sizes(towers_data, tower_names, var, tower):
             group = 'group2'
         elif tower == 'TOWY':
             group = 'group3'
-        
+
         key = (var, height, group)
         if key not in combined_data:
             continue
-        
+
         data = combined_data[key]
         if column not in data.columns:
             continue
@@ -1245,7 +1255,7 @@ def plot_variable_data_for_window_sizes(towers_data, tower_names, var, tower):
         elif var == 'SolarRadWm2':
             window_size = '12H'
             z_threshold = 4
-            
+
         else:
             continue
 
@@ -1253,11 +1263,11 @@ def plot_variable_data_for_window_sizes(towers_data, tower_names, var, tower):
         outliers, rolling_means = rolling_window_outlier_detection(data, window_size, z_threshold)
         outlier_points = data[column][outliers[column]]
         all_outliers[height] = [outlier_points.index, data[column]]
-        
+
     return all_outliers
 
 
-# In[49]:
+# In[51]:
 
 
 towers_data = tower_dfs_15m_8
@@ -1277,7 +1287,7 @@ for var in window_vars:
 # ### 1(b). Simple non-rolling window variables
 # Sigma, SigPhi
 
-# In[50]:
+# In[52]:
 
 
 def set_to_nan(data, names, var, tower):
@@ -1285,7 +1295,7 @@ def set_to_nan(data, names, var, tower):
     all_outliers = collections.defaultdict(dict)
     for height in set(col.split('_')[1] for col in towers_data[tower_names.index(tower)].columns if col.startswith(var)):
         column = f"{tower}_{height}"
-            
+
         group = 'others'
         if tower in ['TOWA', 'TOWB', 'TOWD']:
             group = 'group1'
@@ -1293,11 +1303,11 @@ def set_to_nan(data, names, var, tower):
             group = 'group2'
         elif tower == 'TOWY':
             group = 'group3'
-        
+
         key = (var, height, group)
         if key not in combined_data:
             continue
-        
+
         data = combined_data[key]
         if column not in data.columns:
             continue
@@ -1309,7 +1319,7 @@ def set_to_nan(data, names, var, tower):
     return all_outliers
 
 
-# In[51]:
+# In[53]:
 
 
 # set 0 to NaN
@@ -1325,7 +1335,7 @@ for var in zero_vars:
 # ### 1(c) Wind direction clustering [optional; not used here]
 # WDir, WSpdMph
 
-# In[52]:
+# In[54]:
 
 
 # def calculate_cartesian_coordinates(wind_speed, wind_dir_deg):
@@ -1367,26 +1377,26 @@ for var in zero_vars:
 #                 if wspd_column in df.columns:
 #                     tower_df = df
 #                     break
-            
+
 #             if tower_df is not None and var in data_dict and tower in data_dict[var] and height in data_dict[var][tower]:
 
 #                 wdir_column = f'WDir_{height}'
-                
+
 #                 wspd_data = data_dict[var][tower][height][1]
 #                 wdir_data = tower_df[wdir_column]
 
 #                 # Calculate Cartesian coordinates
 #                 U, V = calculate_cartesian_coordinates(wspd_data, wdir_data)
-                
+
 #                 # Remove rows with NaN values
 #                 nan_indices = np.isnan(U) | np.isnan(V)
 #                 U_clean = U[~nan_indices]
 #                 V_clean = V[~nan_indices]
-                
+
 #                 # Perform DBSCAN clustering
 #                 X = np.column_stack((U_clean, V_clean))
 #                 clustering = DBSCAN(eps=eps, min_samples=min_samples).fit(X)
-                
+
 #                 # Detect outliers
 #                 outlier_indices = clustering.labels_ == -1  # mask, -1 indicates outlier points (True)
 #                 wdir_data_nonnan = wdir_data[~nan_indices]
@@ -1422,13 +1432,13 @@ for var in zero_vars:
 #     return true_wdir_outliers
 
 
-# In[53]:
+# In[55]:
 
 
 # true_wdir_outliers = plot_wind_data(tower_dfs_15m_8, all_outliers)
 
 
-# In[54]:
+# In[56]:
 
 
 # for key in true_wdir_outliers:
@@ -1439,7 +1449,7 @@ for var in zero_vars:
 
 # #### Wind Direction
 
-# In[55]:
+# In[57]:
 
 
 # all_outliers['WDir'] = {}
@@ -1448,7 +1458,7 @@ for var in zero_vars:
 #     tower_idx = tower_names.index(tower)
 #     df = tower_dfs_15m_8[tower_idx]
 #     column_name = f'WDir_{height}'
-    
+
 #     if column_name in df.columns:
 #         wdir_series = df[column_name]
 #         # Store the pandas Series in the appropriate place
@@ -1457,7 +1467,7 @@ for var in zero_vars:
 
 # #### VSSpdMph and PrecipIn (and WDir if not doing clustering)
 
-# In[56]:
+# In[58]:
 
 
 # List of variables to process
@@ -1472,12 +1482,12 @@ for var in vars_to_process:
             if var in column_name:
                 height = column_name.split('_')[-1]  # Extract height from column name
                 var_series = df[column_name]
-                
+
                 # Store the pandas Series in the appropriate place
                 all_outliers[var][tower][height] = [None, var_series]
 
 
-# In[57]:
+# In[59]:
 
 
 cleaned_data = {}
@@ -1502,7 +1512,7 @@ for var in vars:
             cleaned_data[var][tower][height] = data
 
 
-# In[58]:
+# In[60]:
 
 
 # Resulting list of dataframes
@@ -1523,7 +1533,7 @@ for tower in towers:
                 column_name = f"{var}_{height}"
                 series = cleaned_data[var][tower][height]
                 combined_data[column_name] = series
-    
+
     # Convert the dictionary to a DataFrame
     combined_df = pd.DataFrame(combined_data)
     tower_dfs_15m_9.append((tower, combined_df))
@@ -1540,7 +1550,7 @@ tower_dfs_15m_9 = [x[1] for x in tower_dfs_15m_9]
 # 4. The csv contained a start_datetime and end_datetime column, which I populated with the copied and pasted dates (if only one point was an outlier, I only populated the start_datetime; if the outlier was consecutive over time, I provided the start and end datetime of the consecutive outliers)
 # 5. Outliers could be large jumps in the data (those that don't correspond with jumps occuring at the same time as other towers; those are likely real jumps), brief periods of identical values, or visual strangeness (magnitude smaller or larger variations, stair-stepping, etc.)
 
-# In[59]:
+# In[61]:
 
 
 # Set datetimes
@@ -1552,20 +1562,15 @@ for df, tower in zip(tower_dfs_15m_9, towers_of_interest):
     df['timestampUTC'] = df.index.tz_convert('UTC').strftime('%Y%m%d%H%M%S')
     df = df.reset_index(drop=True)
     df = df.set_index('timestampUTC')
-    
+
     # No fillna(-999) here, let NaNs remain intact for outlier removal
     df = df.astype('float32')
-    
-    # Export the precheck file with NaNs replaced by -999
-    df_filled = df.fillna(-999)  # Apply fillna(-999) just before export
-    df_filled.to_csv(f'../data/met_towers_2017-2022_qc-precheck/{tower}_2017-2022_qc-precheck.csv', encoding='utf-8-sig')
-    
     tower_dfs_15m_10.append(df)
 
 
 # ### 4. Remove manually identified outliers
 
-# In[60]:
+# In[62]:
 
 
 # List to store the modified dataframes
@@ -1605,10 +1610,10 @@ def set_nan_in_dataframe(df, ranges):
 # Iterate through each tower of interest
 for tower, tower_df_15m in zip(towers_of_interest, tower_dfs_15m_10):
     print(tower)
-    
+
     # Construct the filename
     file_path = f"../data/met_towers_2017-2022_manual-outlier-id/{tower}_2017-2022_manual-outlier-id.csv"
-    
+
     if os.path.exists(file_path):
         # Load the CSV into a dataframe
         tower_outliers = pd.read_csv(
@@ -1616,10 +1621,10 @@ for tower, tower_df_15m in zip(towers_of_interest, tower_dfs_15m_10):
             header=0,
             parse_dates=['datetime_start', 'datetime_end']
         )
-        
+
         # Extract datetime ranges and corresponding columns
         ranges = tower_outliers[['datetime_start', 'datetime_end', 'column']]
-        
+
         # Convert the "datetime_start" and "datetime_end" to datetime and localize to ET, then convert to UTC
         ranges['datetime_start'] = (
             pd.to_datetime(ranges['datetime_start'], format='mixed', errors='coerce')
@@ -1641,24 +1646,24 @@ for tower, tower_df_15m in zip(towers_of_interest, tower_dfs_15m_10):
 
         # Set the appropriate values to NaN
         tower_df_outliers_removed = set_nan_in_dataframe(tower_df_15m, ranges)
-        
+
         # Append the modified dataframe to the list
         tower_dfs_15m_clean.append(tower_df_outliers_removed)
 
 
-# In[61]:
+# In[63]:
 
 
 tower_dfs_15m_clean[0].head(3)
 
 
-# In[62]:
+# In[64]:
 
 
 tower_dfs_15m_4[0].columns
 
 
-# In[62]:
+# In[65]:
 
 
 preremoval = []
@@ -1668,7 +1673,7 @@ for df, tower in zip(tower_dfs_15m_4, towers_of_interest):
     print(nan_percentage.mean())
 
 
-# In[63]:
+# In[66]:
 
 
 autoremoval = []
@@ -1678,7 +1683,7 @@ for df, tower in zip(tower_dfs_15m_9, towers_of_interest):
     print(nan_percentage.mean())
 
 
-# In[63]:
+# In[67]:
 
 
 manremoval = []
@@ -1688,10 +1693,8 @@ for df, tower in zip(tower_dfs_15m_clean, towers_of_interest):
     print(nan_percentage.mean())
 
 
-# In[66]:
+# In[68]:
 
-
-import pandas as pd
 
 # Function to calculate NaN percentage per dataframe
 def calculate_nan_percentage(df):
@@ -1747,11 +1750,23 @@ nan_percent_df
 
 # ### 5. Export quality assessed data
 
-# In[63]:
+# In[69]:
 
 
 for df, tower in zip(tower_dfs_15m_clean, towers_of_interest):
-    df = df.fillna(-999)
-    df = df.astype('float32')
-    df.to_csv(f'../data/met_towers_2017-2022_final-qc/{tower}_2017-2022_final-qc.csv', encoding='utf-8-sig')
+    output_dir = '../data/met_towers_2017-2022_final-qc'
+    os.makedirs(output_dir, exist_ok=True)   # ← create it if it doesn’t exist
+
+    # now it will succeed
+    df = df.fillna(-999).astype('float32')
+    df.to_csv(
+        os.path.join(output_dir, f'{tower}_2017-2022_final-qc.csv'),
+        encoding='utf-8-sig'
+    )
+
+
+# In[ ]:
+
+
+
 
