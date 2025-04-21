@@ -13,7 +13,6 @@ download_zenodo_latest.py
 import json
 import os
 import sys
-import urllib.error
 import urllib.parse
 import urllib.request
 import zipfile
