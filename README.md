@@ -23,7 +23,7 @@ orr_met_data_processing/
 ├── notebooks/                                      # Ordered Jupyter notebooks to run
 ├── scripts/                                        # Ordered Python script versions of notebooks (from `jupyter nbconvert`)
 ├── setup.sh                                        # Bash script to download & extract data necessary for reproduction
-├── download_data_archive.sh                        # Bash script to download all data stored on Zenodo
+├── download_zenodo_archive.sh                        # Bash script to download all data stored on Zenodo
 ├── environment.yml                                 # Conda environment definition
 └── README.md
 ```
