@@ -14,6 +14,7 @@ dependencies:
   - pymannkendall=1.4.3
   - scikit-learn=1.5.1
   - ephem=4.2
+  - jupyterlab=4.2.5
   - pip
   - pip:
     - missingno==0.5.2
