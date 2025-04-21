@@ -77,7 +77,7 @@ This script will:
 
 ### 4. Run the Analysis
 
-Run the notebooks in numerical order from the `notebooks/` directory:
+Run the notebooks in numerical order from the `notebooks/` directory. To generate all the data, you only need to run the code blocks in `01_outlier_removal.ipynb` and `02_gap_filling.ipynb`. The remaining scripts are optional.
 
 ```bash
 jupyter lab
