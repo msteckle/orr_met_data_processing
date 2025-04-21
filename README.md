@@ -54,7 +54,7 @@ cd orr_met_data_processing
 
 ```bash
 conda env create -f environment.yml
-conda activate orr_met_data_processing
+conda activate orr_met_env
 ```
 
 ### 3. Download and Extract Data

@@ -16,4 +16,4 @@ dependencies:
   - ephem=4.2
   - pip
   - pip:
-    - missingno=0.5.2
+    - missingno==0.5.2
