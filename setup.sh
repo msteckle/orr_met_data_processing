@@ -51,7 +51,18 @@ for name in "${FILES[@]}"; do
     else
       echo "Extracting $name → $folder"
       unzip -q "$out" -d "$folder"
+
+      # If the zip itself contains a top-level folder of the same name, collapse it:
+      nested="$folder/${name%.zip}"
+      if [[ -d "$nested" ]]; then
+        echo "Flattening nested dir → $folder"
+        shopt -s dotglob
+        mv "$nested"/* "$folder"/
+        rmdir "$nested"
+        shopt -u dotglob
+      fi
     fi
+
     echo "Removing $name"
     rm -f "$out"
   fi
