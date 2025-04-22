@@ -97,7 +97,7 @@ Open the following files and run them block-by-block to re-create our data:
 
 ### 5. (Optional) Perform Exploratory Data Analysis (EDA)
 
-> Ensure you have enough space on your machine to store ~3.2GB of 100 to 150 dpi images
+> Ensure you have enough space on your machine to store ~3.2GB of images 150-dpi in resolution
 
 If you would like to visualize the data, there are many figures that will be produced by `03_eda.ipynb`:
 
@@ -113,7 +113,7 @@ orr_met_data_processing/
 │   │   ├── pchip_vs_linear/      # Timeseries of Tower D interpolated by PCHIP and linear methods
 │   │   ├── missing_data_plots/   # MSNO graphs of missing data for each tower
 │   ├── pca/                      # Principal Component Analysis (PCA) graphs
-│   ├── timeseries/               # Many 600-dpi images are stored here; expect ~3.5GB of storage usage to produce these
+│   ├── timeseries/               
 │   │   ├── specific_day/
 │   │   ├── random_day/
 │   │   ├── monthly/
