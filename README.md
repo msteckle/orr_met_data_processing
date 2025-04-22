@@ -75,24 +75,25 @@ This script will:
 - Download [necessary data ZIP files from Zenodo](https://zenodo.org/uploads/15171289)
 - Extract them into appropriate subdirectories
 
-### 4. Run the Analysis
+### 4. Run the Processing Scripts
 
 Run the notebooks in numerical order from the `notebooks/` directory. To generate all the data, you only need to run the code blocks in `01_outlier_removal.ipynb` and `02_gap_filling.ipynb`. The remaining scripts are optional.
 
+To open the `.ipynb` files and run the scripts block-by-block, use jupyter lab:
 ```bash
 jupyter lab
 ```
 
-Alternatively, you can run the corresponding Python scripts in the `scripts/` directory.
+Open the following files and run them block-by-block to re-create our data:
+- `01_outlier_removal.ipynb`
+- `02_gap_filling.ipynb`
 
-```bash
-python scripts/01_outlier_removal.py
-python scripts/02_gap_filling.py
-```
+
+> Alternatively, you can run the corresponding Python scripts in the `scripts/` directory.
 
 ### 5. (Optional) Perform Exploratory Data Analysis (EDA)
 
-> Ensure you have enough space on your machine to store ~3.5GB of high-resolution graphics
+> Ensure you have enough space on your machine to store ~3.2GB of 100 to 150 dpi images
 
 If you would like to visualize the data, there are many figures that will be produced by `03_eda.ipynb`:
 
