@@ -50,6 +50,7 @@ git clone https://github.com/msteckle/orr_met_data_processing.git
 cd orr_met_data_processing
 ```
 
+
 ### 2. Set Up the Conda Environment
 
 ```bash
@@ -61,6 +62,7 @@ Alternatively, if you need to update an existing orr_met_env using the environme
 ```bash
 conda env update -f environment.yml
 ```
+
 
 ### 3. Download and Extract Data
 
@@ -74,6 +76,7 @@ This script will:
 - Create the `data/` directory
 - Download [necessary data ZIP files from Zenodo](https://zenodo.org/uploads/15171289)
 - Extract them into appropriate subdirectories
+
 
 ### 4. Run the Processing Scripts
 
@@ -90,6 +93,7 @@ Open the following files and run them block-by-block to re-create our data:
 
 
 > Alternatively, you can run the corresponding Python scripts in the `scripts/` directory.
+
 
 ### 5. (Optional) Perform Exploratory Data Analysis (EDA)
 
@@ -118,6 +122,7 @@ orr_met_data_processing/
 ```
 
 ---
+
 
 ## Notes
 
